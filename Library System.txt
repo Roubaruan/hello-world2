@@ -1,0 +1,163 @@
+#include <stdio.h> 
+#include <stdlib.h> 
+#include <conio.h>
+
+
+struct BOOK 
+ { 
+ int id,user[10],total,store,days[10]; 
+ char name[31],author[21],pubcom[50],pubtime[20],price[15]; 
+ }books[100]; 
+/*上面是结构体的定义，用于存放书籍及借书的信息。*/ 
+void page_title(char *menu_item)
+ { 
+ char(); 
+ printf(">>> 传 感 图 书 管 理 系 统 <<<\n\n- %s -\n\n",menu_item); 
+ } 
+/*上面是打印页眉的函数，同时通过参数menu_item，可以显示当前的状态。*/
+
+void return_confirm(void) 
+ { 
+ printf("\n按任意键返回……\n"); 
+ getch(); 
+ } 
+/*上面是返回前请求确认的函数，以便在返回前观察结果*/ 
+
+
+
+int search_book(void) 
+ { 
+ int n,i; 
+ printf("请输入图书序号:"); 
+ scanf("%d",&i); 
+ for(n=0;n<100;n++) 
+ { 
+ if(books[n].id==i) 
+ { 
+ printf("书名:%s\n",books[n].name); 
+ printf("作者:%s\n",books[n].author); 
+ printf("存数:%d of ",books[n].store); 
+ printf("%d\n",books[n].total); 
+ return n; 
+ } 
+ } 
+ printf("\n输入错误或无效图书序号.\n"); 
+ return -1; 
+ } 
+/*上面的函数是在数组中找到图书号匹配的记录，显示其信息并返 
+ 回数组下标，如果找不到相应记录则提示错误并返回-1。*/
+
+
+
+void book_out(void) 
+ { 
+ int n,s,l,d; 
+ page_title("借阅图书"); 
+ if((n=search_book())!=-1&&books[n].store>0) 
+ { 
+ printf("请输入借书证序号:"); 
+ scanf("%d",&s); 
+ printf("请输入可借天数:"); 
+ scanf("%d",&d); 
+ for(l=0;l<10;l++) 
+ { 
+ if(books[n].user[l]==0) 
+ { 
+ books[n].user[l]=s; 
+ books[n].days[l]=d; 
+ break; 
+ } 
+ } 
+ books[n].store--; 
+ } 
+ if(n!=-1&&books[n].store==0) printf("此书已经全部借出.\n"); 
+ return_confirm(); 
+ } 
+/*上面是借书的函数，首先调用找书函数*/ 
+
+
+
+
+void book_in(void) 
+ { 
+ int n,s,l; 
+ page_title("归还图书"); 
+ if((n=search_book())!=-1&&books[n].store<books[n].total) 
+ { 
+ printf("借阅者图书证列表:\n"); 
+ for(l=0;l<10;l++) 
+ if (books[n].user[l]!=0) 
+ printf("[%d] - %d天\n",books[n].user[l],books[n].days[l]); 
+ printf("请输入借书证序号:"); 
+ scanf("%d",&s); 
+ for(l=0;l<10;l++) 
+ { 
+ if(books[n].user[l]==s) 
+ { 
+ books[n].user[l]=0; 
+ books[n].days[l]=0; 
+ break; 
+ } 
+ } 
+ books[n].store++; 
+ } 
+ if(n!=-1&&books[n].store==books[n].total) 
+ printf("全部收藏.\n"); 
+ return_confirm(); 
+ } 
+
+
+
+void book_add(void) 
+ { 
+ int n; 
+ page_title("注册新书"); 
+ for(n=0;n<100;n++) 
+ if(books[n].id==0) break; 
+ printf("序号:"); 
+ scanf("%d",&books[n].id); 
+ printf("书名:"); 
+ scanf("%s",&books[n].name); 
+ printf("作者:"); 
+ scanf("%s",&books[n].author); 
+ printf("出版社:"); 
+ scanf("%s",&books[n].pubcom); 
+ printf("出版时间:"); 
+ scanf("%s",&books[n].pubtime); 
+ printf("价格:"); 
+ scanf("%s",&books[n].price); 
+ printf("数量:"); 
+ scanf("%d",&books[n].total); 
+ books[n].store=books[n].total; 
+ return_confirm(); 
+ } 
+
+
+
+void book_del(void) 
+ { 
+ int n; 
+ page_title("注销旧书");  if((n=search_book())!=-1) books[n].id=0; 
+
+ printf("该书已注销.\n"); 
+ return_confirm(); 
+ } 
+
+void main(void) 
+ { 
+menu: page_title("操作选单"); 
+ printf("请用数字键选择操作\n\n"); 
+ printf("1 借阅图书\n2 归还图书\n\n"); 
+ printf("3 注册新书\n4 注销旧书\n\n"); 
+ printf("\n0 退出\n"); 
+ switch(getch()) 
+ { 
+ case '1' : book_out();break; 
+ case '2' : book_in();break; 
+ case '3' : book_add();break; 
+ case '4' : book_del();break; 
+ case '0' : exit(0); 
+ } 
+ goto menu; 
+ } 
+

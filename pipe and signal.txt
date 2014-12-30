@@ -1,0 +1,153 @@
+
+管道
+
+#include <unistd.h>
+#include <sys/types.h>
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+int main()
+{
+	int pipe_fd[2];
+	pid_t pid;
+	char buf_r[100];
+	char* p_wbuf;
+	int r_num;
+	
+	memset(buf_r,0,sizeof(buf_r));
+	
+	/*创建管道*/
+	if(pipe(pipe_fd)<0)
+	{
+		printf("pipe create error\n");
+		return -1;
+	}
+	
+	/*创建子进程*/
+	if((pid=fork())==0)  //子进程 OR 父进程？
+	{
+		printf("\n");
+		close(pipe_fd[1]);
+		sleep(2); /*为什么要睡眠*/
+		if((r_num=read(pipe_fd[0],buf_r,100))>0)
+		{
+			printf(   "%d numbers read from the pipe is %s\n",r_num,buf_r);
+		}	
+		close(pipe_fd[0]);
+		exit(0);
+  	}
+	else if(pid>0)
+	{
+		close(pipe_fd[0]);
+		if(write(pipe_fd[1],"Hello",5)!=-1)
+			printf("parent write1 Hello!\n");
+		if(write(pipe_fd[1]," Pipe",5)!=-1)
+			printf("parent write2 Pipe!\n");
+		close(pipe_fd[1]);
+		sleep(3);
+		waitpid(pid,NULL,0); /*等待子进程结束*/
+		exit(0);
+	}
+	return 0;
+}
+
+
+
+
+信号
+#include <stdio.h>
+
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+
+#include <errno.h>
+#include <unistd.h>
+
+#include <signal.h>
+void print_B(int sig_n)
+{
+    printf("B!\n");
+}
+void print_C(int sig_n)
+{
+    printf("C!\n");
+}
+
+int main()
+{
+    int pipe1_fd[2];
+    int pipe2_fd[2];
+
+    pid_t pid1;
+    pid_t pid2;
+
+    char buf1[10];
+    char buf2[10];
+
+    pipe(pipe1_fd);
+    pid1 = fork();
+
+    if(pid1 == 0)
+    {
+        pipe(pipe2_fd);
+        pid2 = fork();
+
+        if(pid2 == 0)
+        {
+            sleep(2);
+	    while(1)
+	    {
+	       
+	       printf("A!\n");
+	       kill(getppid(),SIGINT);
+	       sleep(2);
+	    }
+	    #if 0
+	    while(1)
+            {
+                printf("A\n");
+                write(pipe2_fd[1], buf2, 10);
+                sleep(1);
+            }
+	    #endif
+        }
+        else
+        {
+            
+            signal(SIGINT,print_B);
+	    sleep(2);
+	    while(1)
+            {
+	        #if 0
+		read(pipe2_fd[0], buf2, 10);
+                printf("B\n");
+                write(pipe1_fd[1], buf1, 10);
+                sleep(1);
+		#endif
+
+		kill(getppid(),SIGQUIT);
+		sleep(2);
+            }
+        }
+    }
+    else
+    {
+        
+	signal(SIGQUIT,print_C);
+	while(1)
+        {
+            #if 0
+	    read(pipe1_fd[0], buf1, 10);
+            printf("C\n");
+            sleep(1);
+	    #endif
+
+	    //signal(SIGQUIT,print_C);
+	    sleep(2);
+        }
+    }
+
+    return 0;
+}
